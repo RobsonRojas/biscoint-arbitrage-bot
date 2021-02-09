@@ -6,10 +6,12 @@
   "author": "Toledo <gustavo@obex.pw>",
   "license": "MIT",
   "dependencies": {
-    "biscoint-api-node": "^1.2.0",
+    "biscoint-api-node": "^1.2.3",
+    "body-parser": "^1.19.0",
     "esm": "^3.2.25",
+    "express": "^4.17.1",
     "fs": "0.0.1-security",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.20",
     "play-sound": "^1.1.3"
   },
   "scripts": {
