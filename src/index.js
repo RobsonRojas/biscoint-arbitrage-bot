@@ -3,6 +3,20 @@ import _ from 'lodash';
 import player from 'play-sound';
 import config from './config.js';
 
+// this will 
+const express = require('express')
+const bodyParser = require('body-parser');
+
+const app = express();
+app.use(bodyParser.json());
+app.listen(process.env.PORT);
+app.post('/', (req, res) => {
+  console.log("req", req)
+  console.log("res", res)
+
+  res.sendStatus(505);
+});
+
 // read the configurations
 let {
   apiKey, apiSecret, amount, amountCurrency, initialBuy, minProfitPercent, intervalSeconds, playSound, simulation,
@@ -119,9 +133,11 @@ async function tradeCycle() {
         if (initialBuy) {
           firstOffer = buyOffer;
           secondOffer = sellOffer;
+          handleMessage(`[${tradeCycleCount}] Buy first`);
         } else {
           firstOffer = sellOffer;
           secondOffer = buyOffer;
+          handleMessage(`[${tradeCycleCount}] Sell first`);
         }
 
         startedAt = Date.now();

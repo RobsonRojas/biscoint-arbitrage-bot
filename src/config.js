@@ -3,17 +3,17 @@ import _ from 'lodash';
 
 
 const config = {
-  apiKey: null,
-  apiSecret: null,
-  amount: 100,
-  amountCurrency: 'BRL',
-  initialBuy: true,
-  minProfitPercent: 0.02,
+  apiKey: process.env.APIKEY || null,
+  apiSecret: process.env.APISECRET || null,
+  amount: process.env.AMOUNT || 100,
+  amountCurrency: process.env.AMOUNTCURRENCY || 'BRL',
+  initialBuy: process.env.INITIALBUY || true,
+  minProfitPercent: process.env.MINPROFITPERCENT || 0.02,
   // specify null to let the bot calculate the minimum allowed interval
-  intervalSeconds: null,
-  playSound: false,
-  simulation: false,
-  executeMissedSecondLeg: true,
+  intervalSeconds: process.env.INTERVALSECONDS || null,
+  playSound: process.env.PLAYSOUND || false,
+  simulation: process.env.SIMULATION || false,
+  executeMissedSecondLeg: process.env.EXECUTEMISSEDSECONDLEG || true,
 };
 
 try {
@@ -23,5 +23,7 @@ try {
 } catch (err) {
   console.log('[INFO] Could not read config.json file.', err);
 }
+
+console.log(config)
 
 export default config;
