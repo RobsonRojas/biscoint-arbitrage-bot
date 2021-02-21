@@ -3,7 +3,7 @@ import _ from 'lodash';
 import player from 'play-sound';
 import config from './config.js';
 
-// this will 
+// to heroku dont blame about PORT env var
 const express = require('express')
 const bodyParser = require('body-parser');
 
@@ -16,6 +16,23 @@ app.post('/', (req, res) => {
 
   res.sendStatus(505);
 });
+
+// bot to communicate you about transactions
+const { Telegraf } = require('telegraf')
+var userid = undefined;
+if (process.env.BOT_TOKEN) {
+  console.log("INITIALIZE TELEGRAM BOT")
+  const bot = new Telegraf(process.env.BOT_TOKEN)
+  bot.start((ctx) => {
+    console.log(">start", ctx.from)
+    let userFirstName = ctx.message.from.first_name
+    let message = ` Olá ${userFirstName}, sou um bot que vai te avisar sempre que uma ordem for executada com sucesso`
+    userid = ctx.from.id
+  
+    ctx.reply(message)
+  })
+  bot.launch()    
+}
 
 // read the configurations
 let {
@@ -159,6 +176,12 @@ async function tradeCycle() {
         lastTrade = Date.now();
 
         handleMessage(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`);
+        // send to bot
+        if (process.env.BOT_TOKEN && userid) {
+          console.log("REPLY BOT USER")
+          bot.telegram.sendMessage(userid, `[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`)
+        }
+
         play();
       } catch (error) {
         handleMessage(`[${tradeCycleCount}] Error on confirm offer: ${error.error}`, 'error');
