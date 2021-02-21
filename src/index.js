@@ -19,20 +19,33 @@ app.post('/', (req, res) => {
 
 // bot to communicate you about transactions
 const { Telegraf } = require('telegraf')
-var userid = undefined;
+var userid = 0;
+const bot = new Telegraf(process.env.BOT_TOKEN)
+ 
+const send_to_telegram_bot_user = message => {
+  // send to bot
+  if (process.env.BOT_TOKEN && userid) {
+    console.log("REPLY BOT USER")
+    bot.telegram.sendMessage(userid, message)
+  }
+}
+
 if (process.env.BOT_TOKEN) {
   console.log("INITIALIZE TELEGRAM BOT")
-  const bot = new Telegraf(process.env.BOT_TOKEN)
   bot.start((ctx) => {
     console.log(">start", ctx.from)
     let userFirstName = ctx.message.from.first_name
     let message = ` Olá ${userFirstName}, sou um bot que vai te avisar sempre que uma ordem for executada com sucesso`
     userid = ctx.from.id
   
-    ctx.reply(message)
+    // ctx.reply(message)
+    console.log("userid", userid)
+    // bot.telegram.sendMessage(userid, message)
+    send_to_telegram_bot_user(message)
   })
   bot.launch()    
 }
+
 
 // read the configurations
 let {
@@ -153,6 +166,65 @@ async function tradeCycle() {
       } catch (error) {
         handleMessage('Error on confirm offer', 'error');
         console.error(error);
+
+        // send to bot
+        send_to_telegram_bot_user(`[${tradeCycleCount}] Error on confirm offer: ${error.error}`)
+        if (firstLeg && !secondLeg) {
+          // probably only one leg of the arbitrage got executed, we have to accept loss and rebalance funds.
+          try {
+            // first we ensure the leg was not actually executed
+            let secondOp = initialBuy ? 'sell' : 'buy';
+            const trades = await bc.trades({ op: secondOp });
+            if (_.find(trades, t => t.offerId === secondOffer.offerId)) {
+              handleMessage(`[${tradeCycleCount}] The second leg was executed despite of the error. Good!`);
+              // send to bot
+              send_to_telegram_bot_user(`[${tradeCycleCount}] The second leg was executed despite of the error. Good!`)
+            } else if (!executeMissedSecondLeg) {
+              handleMessage(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed, and the ` +
+                'executeMissedSecondLeg is false, so we won\'t execute the second leg.',
+              );
+
+              // send to bot
+              send_to_telegram_bot_user(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed, and the ` +
+                'executeMissedSecondLeg is false, so we won\'t execute the second leg.'
+              )
+            } else {
+              handleMessage(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed. ` +
+                'Trying to execute it at a possible loss.',
+              );
+
+              // send to bot
+              send_to_telegram_bot_user(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed. ` +
+                'Trying to execute it at a possible loss.'
+              )
+              secondLeg = await bc.offer({
+                amount,
+                isQuote,
+                op: secondOp,
+              });
+              await bc.confirmOffer({
+                offerId: secondLeg.offerId,
+              });
+              handleMessage(`[${tradeCycleCount}] The second leg was executed and the balance was normalized`);
+
+              // send to bot
+              send_to_telegram_bot_user(`[${tradeCycleCount}] The second leg was executed and the balance was normalized`)
+            }
+          } catch (error) {
+            handleMessage(
+              `[${tradeCycleCount}] Fatal error. Unable to recover from incomplete arbitrage. Exiting.`, 'fatal',
+            );
+
+            // send to bot
+            send_to_telegram_bot_user(`[${tradeCycleCount}] Fatal error. Unable to recover from incomplete arbitrage. Exiting.`)            
+            await sleep(500);
+            process.exit(1);
+          }
+        }
       }
     }
   } catch (error) {
