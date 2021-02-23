@@ -26,7 +26,7 @@ const send_to_telegram_bot_user = message => {
   // send to bot
   if (process.env.BOT_TOKEN && userid) {
     console.log("REPLY BOT USER")
-    bot.telegram.sendMessage(userid, message)
+    bot.telegram.sendMessage(userid, process.env.BOT_NAME + message)
   }
 }
 
@@ -189,11 +189,7 @@ async function tradeCycle() {
         lastTrade = Date.now();
 
         handleMessage(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`);
-        // send to bot
-        if (process.env.BOT_TOKEN && userid) {
-          console.log("REPLY BOT USER")
-          bot.telegram.sendMessage(userid, `[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`)
-        }
+        send_to_telegram_bot_user(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`)
 
         play();
       } catch (error) {
