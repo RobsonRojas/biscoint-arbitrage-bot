@@ -25,7 +25,7 @@ const bot = new Telegraf(process.env.BOT_TOKEN)
 const send_to_telegram_bot_user = message => {
   // send to bot
   if (process.env.BOT_TOKEN && userid) {
-    console.log("REPLY BOT USER")
+    console.log("REPLY BOT USER", process.env.BOT_NAME + message)
     bot.telegram.sendMessage(userid, process.env.BOT_NAME + message)
   }
 }
