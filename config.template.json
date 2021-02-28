@@ -7,5 +7,8 @@
   "minProfitPercent": 0.02,
   "intervalSeconds": null,
   "playSound": false,
-  "simulation": false
+  "simulation": false,
+  "executeMissedSecondLeg": true,
+  "telegramBotToken": "past-your-telegram-bot-token",
+  "botName": "biscoint10"
 }

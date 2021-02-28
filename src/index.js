@@ -1,7 +1,7 @@
-import Biscoint from 'biscoint-api-node';
-import _ from 'lodash';
-import player from 'play-sound';
-import config from './config.js';
+const Biscoint = require('biscoint-api-node')
+const _ = require('lodash')
+const player = require('play-sound')
+const config = require('./config.js')
 
 // to heroku dont blame about PORT env var
 const express = require('express')
@@ -9,7 +9,7 @@ const bodyParser = require('body-parser');
 
 const app = express();
 app.use(bodyParser.json());
-app.listen(process.env.PORT);
+app.listen(config.httpPort);
 app.post('/', (req, res) => {
   console.log("req", req)
   console.log("res", res)
@@ -20,17 +20,17 @@ app.post('/', (req, res) => {
 // bot to communicate you about transactions
 const { Telegraf } = require('telegraf')
 var userid = 0;
-const bot = new Telegraf(process.env.BOT_TOKEN)
+const bot = new Telegraf(config.telegramBotToken)
  
 const send_to_telegram_bot_user = message => {
   // send to bot
-  if (process.env.BOT_TOKEN && userid) {
+  if (config.telegramBotToken && userid) {
     console.log("REPLY BOT USER")
-    bot.telegram.sendMessage(userid, process.env.BOT_NAME + message)
+    bot.telegram.sendMessage(userid, config.botName + message)
   }
 }
 
-if (process.env.BOT_TOKEN) {
+if (config.telegramBotToken) {
   console.log("INITIALIZE TELEGRAM BOT")
   bot.start((ctx) => {
     console.log(">start", ctx.from)

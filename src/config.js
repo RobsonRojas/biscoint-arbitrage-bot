@@ -1,5 +1,5 @@
-import fs from 'fs';
-import _ from 'lodash';
+const fs = require('fs')
+const _ = require('lodash')
 
 
 const config = {
@@ -14,6 +14,9 @@ const config = {
   playSound: process.env.PLAYSOUND || false,
   simulation: process.env.SIMULATION || false,
   executeMissedSecondLeg: process.env.EXECUTEMISSEDSECONDLEG || true,
+  telegramBotToken: process.env.BOT_TOKEN || null,
+  botName: process.env.BOT_NAME || "biscointBotRobson160",
+  httpPort: process.env.PORT || 8000
 };
 
 try {
@@ -26,4 +29,4 @@ try {
 
 console.log(config)
 
-export default config;
+module.exports = config
