@@ -155,8 +155,8 @@ async function tradeCycle() {
 
         lastTrade = Date.now();
 
-        handleMessage(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`);
-        send_to_telegram_bot_user(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms)`)
+        handleMessage(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms) + ${lastTrade.toString()}`);
+        send_to_telegram_bot_user(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms) + ${lastTrade.toString()}`);
 
         play();
       } catch (error) {
