@@ -1,21 +1,51 @@
-import Biscoint from 'biscoint-api-node';
-import _ from 'lodash';
-import player from 'play-sound';
-import config from './config.js';
+const Biscoint = require('biscoint-api-node')
+const _ = require('lodash')
+const player = require('play-sound')
+const config = require('./config.js')
 
-// this will 
+// to heroku dont blame about PORT env var
 const express = require('express')
 const bodyParser = require('body-parser');
 
 const app = express();
 app.use(bodyParser.json());
-app.listen(process.env.PORT);
+app.listen(config.httpPort);
 app.post('/', (req, res) => {
   console.log("req", req)
   console.log("res", res)
 
   res.sendStatus(505);
 });
+
+// bot to communicate you about transactions
+const { Telegraf } = require('telegraf')
+var userid = 0;
+const bot = new Telegraf(config.telegramBotToken)
+ 
+const send_to_telegram_bot_user = message => {
+  // send to bot
+  if (config.telegramBotToken && userid) {
+    console.log("REPLY BOT USER")
+    bot.telegram.sendMessage(userid, config.botName + message)
+  }
+}
+
+if (config.telegramBotToken) {
+  console.log("INITIALIZE TELEGRAM BOT")
+  bot.start((ctx) => {
+    console.log(">start", ctx.from)
+    let userFirstName = ctx.message.from.first_name
+    let message = ` Olá ${userFirstName}, sou um bot que vai te avisar sempre que uma ordem for executada com sucesso`
+    userid = ctx.from.id
+  
+    // ctx.reply(message)
+    console.log("userid", userid)
+    // bot.telegram.sendMessage(userid, message)
+    send_to_telegram_bot_user(message)
+  })
+  bot.launch()    
+}
+
 
 // read the configurations
 let {
@@ -125,11 +155,72 @@ async function tradeCycle() {
 
         lastTrade = Date.now();
 
-        handleMessage(`Success, profit: + ${profit.toFixed(3)}%`);
+        handleMessage(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms) + ${lastTrade.toString()}`);
+        send_to_telegram_bot_user(`[${tradeCycleCount}] Success, profit: + ${profit.toFixed(3)}% (${finishedAt - startedAt} ms) + ${lastTrade.toString()}`);
+
         play();
       } catch (error) {
         handleMessage('Error on confirm offer', 'error');
         console.error(error);
+
+        // send to bot
+        send_to_telegram_bot_user(`[${tradeCycleCount}] Error on confirm offer: ${error.error}`)
+        if (firstLeg && !secondLeg) {
+          // probably only one leg of the arbitrage got executed, we have to accept loss and rebalance funds.
+          try {
+            // first we ensure the leg was not actually executed
+            let secondOp = initialBuy ? 'sell' : 'buy';
+            const trades = await bc.trades({ op: secondOp });
+            if (_.find(trades, t => t.offerId === secondOffer.offerId)) {
+              handleMessage(`[${tradeCycleCount}] The second leg was executed despite of the error. Good!`);
+              // send to bot
+              send_to_telegram_bot_user(`[${tradeCycleCount}] The second leg was executed despite of the error. Good!`)
+            } else if (!executeMissedSecondLeg) {
+              handleMessage(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed, and the ` +
+                'executeMissedSecondLeg is false, so we won\'t execute the second leg.',
+              );
+
+              // send to bot
+              send_to_telegram_bot_user(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed, and the ` +
+                'executeMissedSecondLeg is false, so we won\'t execute the second leg.'
+              )
+            } else {
+              handleMessage(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed. ` +
+                'Trying to execute it at a possible loss.',
+              );
+
+              // send to bot
+              send_to_telegram_bot_user(
+                `[${tradeCycleCount}] Only the first leg of the arbitrage was executed. ` +
+                'Trying to execute it at a possible loss.'
+              )
+              secondLeg = await bc.offer({
+                amount,
+                isQuote,
+                op: secondOp,
+              });
+              await bc.confirmOffer({
+                offerId: secondLeg.offerId,
+              });
+              handleMessage(`[${tradeCycleCount}] The second leg was executed and the balance was normalized`);
+
+              // send to bot
+              send_to_telegram_bot_user(`[${tradeCycleCount}] The second leg was executed and the balance was normalized`)
+            }
+          } catch (error) {
+            handleMessage(
+              `[${tradeCycleCount}] Fatal error. Unable to recover from incomplete arbitrage. Exiting.`, 'fatal',
+            );
+
+            // send to bot
+            send_to_telegram_bot_user(`[${tradeCycleCount}] Fatal error. Unable to recover from incomplete arbitrage. Exiting.`)            
+            await sleep(500);
+            process.exit(1);
+          }
+        }
       }
     }
   } catch (error) {
