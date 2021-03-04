@@ -20,6 +20,7 @@ app.post('/', (req, res) => {
 // bot to communicate you about transactions
 const { Telegraf } = require('telegraf')
 var userid = 0;
+var showLog = false;
 const bot = new Telegraf(config.telegramBotToken)
  
 const send_to_telegram_bot_user = message => {
@@ -43,6 +44,15 @@ if (config.telegramBotToken) {
     // bot.telegram.sendMessage(userid, message)
     send_to_telegram_bot_user(message)
   })
+
+  bot.command("log",  (ctx) => {
+    if (showLog) {
+      showLog = false;
+    } else {
+      showLog = true;
+    }
+  })
+
   bot.launch()    
 }
 
@@ -247,6 +257,9 @@ function percent(value1, value2) {
 
 function handleMessage(message, level = 'info', throwError = false) {
   console.log(`[Biscoint BOT] [${level}] - ${message}`);
+  if (showLog) {
+    send_to_telegram_bot_user(`[Biscoint BOT] [${level}] - ${message}`)
+  }
   if (throwError) {
     throw new Error(message);
   }
