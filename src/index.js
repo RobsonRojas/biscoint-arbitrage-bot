@@ -24,7 +24,7 @@ const bot = new Telegraf(config.telegramBotToken)
  
 const send_to_telegram_bot_user = message => {
   // send to bot
-  if (config.telegramBotToken && userid) {
+  if (config.telegramBotToken && userid != 0) {
     console.log("REPLY BOT USER")
     bot.telegram.sendMessage(userid, config.botName + message)
   }
@@ -226,6 +226,7 @@ async function tradeCycle() {
   } catch (error) {
     handleMessage('Error on get offer', 'error');
     console.error(error);
+    send_to_telegram_bot_user(`Error on get offer: ${error}.`)   
   }
 }
 
