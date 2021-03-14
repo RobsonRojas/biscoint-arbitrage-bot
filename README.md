@@ -94,3 +94,28 @@ Antes de executar pela primeira vez, e sempre que atualizar o projeto, execute:
 Para executar o robô, execute o comando abaixo:
 
 `npm start`
+
+## Configurando no heroku
+
+### Pré-requisitos
+* Você precisa criar um app no heroku e configurar um dyno na aba **Resources**.
+* Você precisa criar um bot no telegram e copiar o token gerado
+
+
+### Configure as variáveis de ambiente na seção 
+
+Na aba **Settings** configure as variáveis de ambiente:
+
+* Clique no botão **RevealConfigVars** na área **Config Vars**:
+  - **APIKEY**: Veja a descrição na seção configuração de **apiKey** acima
+  - **APISECRET**: Veja a descrição na seção configuração de **apiSecret** acima
+  - **AMOUNT**: Veja a descrição na seção configuração **apiSecret** acima
+  - **MINPROFITPERCENT**: Veja a descrição na seção configuração **apiSecret** acima
+  - **BOT_TOKEN**: Crie um bot no telegram e cole aqui o token gerado.
+
+### Executando
+Você precisa fazer o upload do código do bot para o app do heroku, siga as instruções na aba **Deploy**.
+
+
+### Configurar o bot do telegram:
+  - Para conectar o bot do telegram com o bot na heroku, abra o chat com o bot do telegram e envie a mensagem **/start**.
